@@ -1,0 +1,93 @@
+# Copyright (C) 2024 Daniel Mueller <deso@posteo.net>
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+name: Test
+
+on:
+  pull_request:
+  push:
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+  # Build without debug information enabled to decrease compilation time
+  # and binary sizes in CI. This option is assumed to only have marginal
+  # effects on the generated code, likely only in terms of section
+  # arrangement. See
+  # https://doc.rust-lang.org/cargo/reference/environment-variables.html
+  # https://doc.rust-lang.org/rustc/codegen-options/index.html#debuginfo
+  RUSTFLAGS: '-C debuginfo=0'
+
+jobs:
+  build:
+    name: Build [${{ matrix.rust }}, ${{ matrix.profile }}]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        rust: [stable]
+        profile: [dev, release]
+    steps:
+    - uses: actions/checkout@v4
+    - uses: dtolnay/rust-toolchain@master
+      with:
+        toolchain: ${{ matrix.rust }}
+    - name: Build
+      run: |
+        cargo build --profile=${{ matrix.profile }} --all-targets
+  build-minimum:
+    name: Build using minimum versions of dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Nightly Rust
+        uses: dtolnay/rust-toolchain@nightly
+      - run: cargo +nightly -Z minimal-versions update
+      - name: Install minimum Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          # Please adjust README and rust-version field in Cargo.toml files when
+          # bumping version.
+          toolchain: 1.64
+      - name: Build
+        run: cargo build
+  test:
+    name: Test and coverage
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install cargo-llvm-cov
+      uses: taiki-e/install-action@cargo-llvm-cov
+    - name: Test and gather coverage
+      run: cargo llvm-cov --lcov --output-path lcov.info
+    - name: Upload code coverage results
+      uses: codecov/codecov-action@v4
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      with:
+        files: lcov.info
+  clippy:
+    name: Lint with clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo clippy --workspace --no-deps --all-targets -- -A unknown_lints -A deprecated -D warnings
+  rustfmt:
+    name: Check code formatting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: rustfmt
+      - run: cargo +nightly fmt --all -- --check
+  cargo-doc:
+    name: Generate documentation
+    runs-on: ubuntu-latest
+    env:
+      RUSTDOCFLAGS: '--cfg docsrs -D warnings'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
+      - run: cargo doc --workspace --no-deps
