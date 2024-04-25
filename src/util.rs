@@ -17,13 +17,12 @@ pub(crate) fn format_build_id(build_id: &[u8]) -> String {
 }
 
 
-pub(crate) fn parse_urls(urls_str: &str) -> Result<Vec<Url>> {
+pub(crate) fn split_env_var_contents(urls_str: &str) -> impl Iterator<Item = &str> {
   urls_str
     .split([',', ' '])
     .map(|s| s.trim())
     .filter(|s| !s.is_empty())
-    .map(|url| Url::parse(url.trim()).with_context(|| format!("failed to parse URL `{url}`")))
-    .collect::<Result<_>>()
+    .map(|url| url.trim())
 }
 
 
@@ -46,42 +45,29 @@ mod tests {
 
   /// Check that we can properly parse a space separated list of URLs.
   #[test]
-  fn parse_space_separated_urls() {
+  fn split_space_separated_urls() {
     let urls_str = "https://debug.infod https://de.bug.info.d";
-    let urls = parse_urls(urls_str).unwrap();
-    assert_eq!(
-      urls,
-      vec![
-        Url::parse("https://debug.infod").ok().unwrap(),
-        Url::parse("https://de.bug.info.d").ok().unwrap(),
-      ],
-    );
+    let urls = split_env_var_contents(urls_str).collect::<Vec<_>>();
+    assert_eq!(urls, vec!["https://debug.infod", "https://de.bug.info.d",],);
 
     // Note the trailing space.
     let urls_str = "https://debug.infod ";
-    let urls = parse_urls(urls_str).unwrap();
-    assert_eq!(urls, vec![Url::parse("https://debug.infod").ok().unwrap()]);
+    let urls = split_env_var_contents(urls_str).collect::<Vec<_>>();
+    assert_eq!(urls, vec!["https://debug.infod"]);
   }
 
   /// Check that we can properly parse a comma separated list of URLs.
   #[test]
   fn parse_comma_separated_urls() {
     let urls_str = "https://debug.infod,https://de.bug.info.d";
-    let urls = parse_urls(urls_str).unwrap();
-    assert_eq!(
-      urls,
-      vec![
-        Url::parse("https://debug.infod").ok().unwrap(),
-        Url::parse("https://de.bug.info.d").ok().unwrap(),
-      ],
-    );
+    let urls = split_env_var_contents(urls_str).collect::<Vec<_>>();
+    assert_eq!(urls, vec!["https://debug.infod", "https://de.bug.info.d",],);
   }
 
   /// Check that we can properly parse a comma separated list of URLs.
   #[test]
   fn parse_no_valid_urls() {
-    let urls = parse_urls("").unwrap();
-    assert_eq!(urls, Vec::new());
-    let _err = parse_urls("!#&*(@&!").unwrap_err();
+    let urls = split_env_var_contents("").collect::<Vec<_>>();
+    assert_eq!(urls, Vec::<&str>::new());
   }
 }

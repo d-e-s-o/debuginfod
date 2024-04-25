@@ -105,25 +105,16 @@ mod tests {
   use blazesym::symbolize::Source;
   use blazesym::symbolize::Symbolizer;
 
-  use reqwest::Url;
-
   use tempfile::tempdir;
 
-
-  /// Make sure that we fail `Client` construction when no base URLs are
-  /// provided.
-  #[test]
-  #[should_panic(expected = "provided base URLs must not be empty")]
-  fn empty_base_urls() {
-    let _result = Client::new(vec![]);
-  }
 
   /// Check that we can successfully fetch debug information.
   #[test]
   fn fetch_debug_info() {
     let cache_dir = tempdir().unwrap();
-    let urls = vec![Url::parse("https://debuginfod.fedoraproject.org/").unwrap()];
-    let client = CachingClient::new(Client::new(urls), cache_dir.path()).unwrap();
+    let urls = ["https://debuginfod.fedoraproject.org/"];
+    let client = Client::new(urls).unwrap().unwrap();
+    let client = CachingClient::new(client, cache_dir.path()).unwrap();
     // Build ID of `/usr/bin/sleep` on Fedora 38.
     let build_id = [
       0xae, 0xb9, 0xa9, 0x83, 0xac, 0xe1, 0xfb, 0x04, 0x7b, 0x23, 0x41, 0xb1, 0x95, 0x01, 0x65,
@@ -146,8 +137,9 @@ mod tests {
   #[test]
   fn fetch_debug_info_not_found() {
     let cache_dir = tempdir().unwrap();
-    let urls = vec![Url::parse("https://debuginfod.fedoraproject.org/").unwrap()];
-    let client = CachingClient::new(Client::new(urls), cache_dir.path()).unwrap();
+    let urls = ["https://debuginfod.fedoraproject.org/"];
+    let client = Client::new(urls).unwrap().unwrap();
+    let client = CachingClient::new(client, cache_dir.path()).unwrap();
     let build_id = [0x00];
     let info = client.fetch_debug_info(&build_id).unwrap();
     assert!(info.is_none());

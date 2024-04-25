@@ -18,7 +18,7 @@ use reqwest::Url;
 use crate::log::debug;
 use crate::log::warn;
 use crate::util::format_build_id;
-use crate::util::parse_urls;
+use crate::util::split_env_var_contents;
 
 
 /// A client for interacting with (one or more) `debuginfod` servers.
@@ -35,33 +35,45 @@ impl Client {
   /// Create a new `Client` able to speak the debuginfod protocol.
   ///
   /// The provided `base_urls` is a list of URLs in decreasing order of
-  /// importance.
-  ///
-  /// # Panics
-  /// The function panics if `base_urls` is empty.
-  pub fn new(base_urls: Vec<Url>) -> Self {
-    assert!(
-      !base_urls.is_empty(),
-      "provided base URLs must not be empty"
-    );
+  /// importance. [`None`] will be returned if this list is empty.
+  pub fn new<U>(base_urls: U) -> Result<Option<Self>>
+  where
+    U: for<'url> IntoIterator<Item = &'url str>,
+    //U: IntoIterator<Item = &str>,
+  {
+    let base_urls = base_urls
+      .into_iter()
+      .map(|url| Url::parse(url.trim()).with_context(|| format!("failed to parse URL `{url}`")))
+      .collect::<Result<Vec<_>>>()?;
+
+    if base_urls.is_empty() {
+      return Ok(None)
+    }
     debug!("using debuginfod URLs: {base_urls:#?}");
 
     let client = HttpClient::new();
-    Self { base_urls, client }
+    let slf = Self { base_urls, client };
+    Ok(Some(slf))
   }
 
-  /// Returns a vector of URLs based on format of the
-  /// `DEBUGINFOD_URLS` environment variable value, which is either a
-  /// comma separated or space separated list of URLs.
-  pub fn from_env() -> Result<Self> {
-    let urls_str =
-      env::var_os("DEBUGINFOD_URLS").context("DEBUGINFOD_URLS variable is not present")?;
+  /// Create a new `Client` object with URLs parsed from the
+  /// `DEBUGINFOD_URLS` environment variable.
+  ///
+  /// If `DEBUGINFOD_URLS` is not present or empty, `Ok(None)` will be
+  /// return. If the variable contents could not be parsed, an error
+  /// will be emitted.
+  pub fn from_env() -> Result<Option<Self>> {
+    let urls_str = if let Some(urls_str) = env::var_os("DEBUGINFOD_URLS") {
+      urls_str
+    } else {
+      return Ok(None)
+    };
+
     let urls_str = urls_str
       .to_str()
       .context("DEBUGINFOD_URLS does not contain valid Unicode")?;
-    let urls = parse_urls(urls_str)?;
-    let slf = Self::new(urls);
-    Ok(slf)
+    let urls = split_env_var_contents(urls_str);
+    Self::new(urls)
   }
 
   /// Fetch the debug info for the given build ID.
@@ -147,16 +159,18 @@ mod tests {
   /// Make sure that we fail `Client` construction when no base URLs are
   /// provided.
   #[test]
-  #[should_panic(expected = "provided base URLs must not be empty")]
-  fn empty_base_urls() {
-    let _result = Client::new(vec![]);
+  fn no_valid_urls() {
+    let client = Client::new([]).unwrap();
+    assert!(client.is_none());
+
+    let _err = Client::new(["!#&*(@&!"]).unwrap_err();
   }
 
   /// Check that we can successfully fetch debug information.
   #[test]
   fn fetch_debug_info() {
-    let urls = vec![Url::parse("https://debuginfod.fedoraproject.org/").unwrap()];
-    let client = Client::new(urls);
+    let urls = ["https://debuginfod.fedoraproject.org/"];
+    let client = Client::new(urls).unwrap().unwrap();
     // Build ID of `/usr/bin/sleep` on Fedora 38.
     let build_id = [
       0xae, 0xb9, 0xa9, 0x83, 0xac, 0xe1, 0xfb, 0x04, 0x7b, 0x23, 0x41, 0xb1, 0x95, 0x01, 0x65,
@@ -182,8 +196,8 @@ mod tests {
   /// ID.
   #[test]
   fn fetch_debug_info_not_found() {
-    let urls = vec![Url::parse("https://debuginfod.fedoraproject.org/").unwrap()];
-    let client = Client::new(urls);
+    let urls = ["https://debuginfod.fedoraproject.org/"];
+    let client = Client::new(urls).unwrap().unwrap();
     let build_id = [0x00];
     let info = client.fetch_debug_info(&build_id).unwrap();
     assert!(info.is_none());
