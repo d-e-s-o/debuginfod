@@ -1,12 +1,28 @@
 [package]
 name = "debuginfod"
-version = "0.0.0"
+version = "0.1.0"
 edition = "2021"
 rust-version = "1.64"
 license = "Apache-2.0 OR MIT"
 homepage = "https://github.com/d-e-s-o/debuginfod"
 repository = "https://github.com/d-e-s-o/debuginfod.git"
 readme = "README.md"
+categories = [
+  "api-bindings",
+  "caching",
+  "development-tools",
+  "filesystem",
+]
+keywords = [
+  "debuginfod",
+  "api",
+  "debugging",
+  "dwarf",
+  "tracing",
+]
+description = """
+A crate for interacting with debuginfod servers.
+"""
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
