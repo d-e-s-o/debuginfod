@@ -8,6 +8,7 @@ debuginfod
 ==========
 
 - [Documentation][docs-rs]
+- [Changelog](CHANGELOG.md)
 
 A crate for interacting with [`debuginfod`][debuginfod] servers.
 

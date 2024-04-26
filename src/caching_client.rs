@@ -18,6 +18,7 @@ use crate::Client;
 
 
 /// A debuginfod client that caches data using the file system.
+#[derive(Debug)]
 pub struct CachingClient {
   /// The debuginfod client we use for satisfying requests.
   client: Client,
