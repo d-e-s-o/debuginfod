@@ -21,13 +21,18 @@ env:
 
 jobs:
   build:
-    name: Build [${{ matrix.rust }}, ${{ matrix.profile }}]
+    name: Build [${{ matrix.rust }}, ${{ matrix.profile }}, ${{ matrix.args }}]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         rust: [stable]
         profile: [dev, release]
+        args: ['--all-targets']
+        include:
+        - rust: stable
+          profile: dev
+          args: --no-default-features
     steps:
     - uses: actions/checkout@v4
     - uses: dtolnay/rust-toolchain@master
@@ -35,7 +40,7 @@ jobs:
         toolchain: ${{ matrix.rust }}
     - name: Build
       run: |
-        cargo build --profile=${{ matrix.profile }} --all-targets
+        cargo build --profile=${{ matrix.profile }} ${{ matrix.args }}
   build-minimum:
     name: Build using minimum versions of dependencies
     runs-on: ubuntu-latest
