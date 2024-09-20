@@ -30,6 +30,8 @@ A crate for interacting with debuginfod servers.
 default = ["fs-cache"]
 # Enable support for file system based caching.
 fs-cache = ["dep:tempfile"]
+# Enable support for emitting traces.
+tracing = ["dep:tracing"]
 
 [dependencies]
 anyhow = "1.0.68"
