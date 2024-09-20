@@ -29,12 +29,13 @@ A crate for interacting with debuginfod servers.
 [features]
 default = ["fs-cache"]
 # Enable support for file system based caching.
-fs-cache = ["dep:tempfile"]
+fs-cache = ["dep:dirs", "dep:tempfile"]
 # Enable support for emitting traces.
 tracing = ["dep:tracing"]
 
 [dependencies]
 anyhow = "1.0.68"
+dirs = {version = "5.0", default-features = false, optional = true}
 reqwest = {version = "0.12.4", features = ["blocking", "gzip"]}
 tempfile = {version = "3.10.1", default-features = false, optional = true}
 tracing = {version = "0.1.27", default-features = false, optional = true}

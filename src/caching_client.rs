@@ -1,6 +1,7 @@
 // Copyright (C) 2024 Daniel Mueller <deso@posteo.net>
 // SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+use std::env;
 use std::fs::create_dir_all;
 use std::fs::File;
 use std::io::copy;
@@ -9,6 +10,9 @@ use std::path::PathBuf;
 
 use anyhow::Context as _;
 use anyhow::Result;
+
+use dirs::cache_dir;
+use dirs::home_dir;
 
 use tempfile::NamedTempFile;
 
@@ -29,6 +33,12 @@ pub struct CachingClient {
 impl CachingClient {
   /// Create a new [`CachingClient`] using `cache_dir` as the directory at
   /// which fetched debug info files are cached on the file system.
+  ///
+  /// # Notes
+  /// Unless you have a good reason not to, it is likely best to use the
+  /// system's cache directory to share data with other debuginfod aware
+  /// programs. Hence, consider using the [`CachingClient::from_env`]
+  /// constructor instead.
   pub fn new<P>(client: Client, cache_dir: P) -> Result<Self>
   where
     P: AsRef<Path>,
@@ -44,6 +54,24 @@ impl CachingClient {
     Ok(slf)
   }
 
+  /// Create a new [`CachingClient`] using the path contained in the
+  /// `DEBUGINFOD_CACHE_PATH` environment variable as the directory at
+  /// which fetched debug info files are cached on the file system.
+  ///
+  /// If `DEBUGINFOD_CACHE_PATH` is not present, then if
+  /// `XDG_CACHE_HOME` is set `$XDG_CACHE_HOME/debuginfod_client` is
+  /// used and if that is unset as well then
+  /// `$HOME/.cache/debuginfod_client` will be used.
+  pub fn from_env(client: Client) -> Result<Self> {
+    let cache_path = env::var_os("DEBUGINFOD_CACHE_PATH")
+      .map(PathBuf::from)
+      .or_else(|| cache_dir().map(|dir| dir.join("debuginfod_client")))
+      .or_else(|| home_dir().map(|dir| dir.join(".cache").join("debuginfod_client")))
+      .context("DEBUGINFOD_CACHE_PATH environment variable not found")?;
+
+    Self::new(client, cache_path)
+  }
+
   #[inline]
   fn debuginfo_path(&self, build_id: &[u8]) -> PathBuf {
     let build_id = format_build_id(build_id);
@@ -51,8 +79,7 @@ impl CachingClient {
     self.cache_dir.join(build_id).join("debuginfo")
   }
 
-  /// Fetch the debug info for the given build ID. Retrieved data is
-  /// written to the provided `Write` object.
+  /// Fetch the debug info for the given build ID.
   pub fn fetch_debug_info(&self, build_id: &[u8]) -> Result<Option<PathBuf>> {
     let path = self.debuginfo_path(build_id);
     if path.try_exists()? {
