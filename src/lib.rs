@@ -1,6 +1,16 @@
 // Copyright (C) 2024 Daniel Mueller <deso@posteo.net>
 // SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+//! A crate for interacting with [`debuginfod`][debuginfod] servers.
+//!
+//! [debuginfod]: https://sourceware.org/elfutils/Debuginfod.html
+
+#![warn(
+  missing_debug_implementations,
+  missing_docs,
+  clippy::absolute_paths,
+  rustdoc::broken_intra_doc_links
+)]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
 #[cfg(feature = "fs-cache")]
