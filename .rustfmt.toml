@@ -7,3 +7,5 @@ edition = "2021"
 match_block_trailing_comma = true
 tab_spaces = 2
 trailing_semicolon = false
+wrap_comments = true
+comment_width = 80
