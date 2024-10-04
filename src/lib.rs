@@ -31,14 +31,15 @@ mod log {
 #[allow(unused_imports)]
 mod log {
   macro_rules! debug {
-        ($($args:tt)*) => {{
-          if false {
-            // Make sure to use `args` to prevent any warnings about
-            // unused variables.
-            let _args = format_args!($($args)*);
-          }
-        }};
-    }
+    ($($args:tt)*) => {{
+      if false {
+        // Make sure to use `args` to prevent any warnings about
+        // unused variables.
+        let _args = format_args!($($args)*);
+      }
+    }};
+  }
+
   pub(crate) use debug;
   pub(crate) use debug as error;
   pub(crate) use debug as info;
