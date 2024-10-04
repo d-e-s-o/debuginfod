@@ -13,6 +13,10 @@
 )]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
+use crate::util::format_build_id;
+use std::borrow::Cow;
+use std::fmt;
+
 #[cfg(feature = "fs-cache")]
 mod caching_client;
 mod client;
@@ -55,4 +59,35 @@ mod log {
   pub(crate) use debug as info;
   pub(crate) use debug as trace;
   pub(crate) use debug as warn;
+}
+
+/// The (GNU) build id is a randomly generated string added by most compilers to
+/// executables which is used by debuginfod to index them. It's typically stored
+/// as a note in ELF files with name `ELF_NOTE_GNU` and type `NT_GNU_BUILD_ID`.
+/// Not all runtimes produce it, for example, the Rust compiler does not
+/// generate it, and Golang stores its build id in `.note.go.buildid`, but for
+/// all intents and purposes the GNU build id is the only relevant one when it
+/// comes to debuginfod servers.
+#[derive(Debug)]
+pub enum BuildId<'id> {
+  /// The raw bytes of a build id read off ELF.
+  RawBytes(Cow<'id, [u8]>),
+  /// Printable build id in hex.
+  Formatted(Cow<'id, str>),
+}
+
+impl BuildId<'_> {
+  /// Returns a string representation in hex.
+  pub fn formatted(&self) -> Cow<'_, str> {
+    match self {
+      BuildId::RawBytes(bytes) => Cow::Owned(format_build_id(bytes)),
+      BuildId::Formatted(string) => Cow::Borrowed(string),
+    }
+  }
+}
+
+impl fmt::Display for BuildId<'_> {
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    write!(f, "{}", self.formatted())
+  }
 }
