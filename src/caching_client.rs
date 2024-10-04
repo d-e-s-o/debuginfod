@@ -5,6 +5,7 @@ use std::env;
 use std::fs::create_dir_all;
 use std::fs::File;
 use std::io::copy;
+use std::ops::Deref;
 use std::path::Path;
 use std::path::PathBuf;
 
@@ -17,7 +18,7 @@ use dirs::home_dir;
 use tempfile::NamedTempFile;
 
 use crate::log::debug;
-use crate::util::format_build_id;
+use crate::BuildId;
 use crate::Client;
 
 
@@ -73,14 +74,15 @@ impl CachingClient {
   }
 
   #[inline]
-  fn debuginfo_path(&self, build_id: &[u8]) -> PathBuf {
-    let build_id = format_build_id(build_id);
-
-    self.cache_dir.join(build_id).join("debuginfo")
+  fn debuginfo_path(&self, build_id: &BuildId) -> PathBuf {
+    self
+      .cache_dir
+      .join(build_id.formatted().deref())
+      .join("debuginfo")
   }
 
   /// Fetch the debug info for the given build ID.
-  pub fn fetch_debug_info(&self, build_id: &[u8]) -> Result<Option<PathBuf>> {
+  pub fn fetch_debug_info(&self, build_id: &BuildId) -> Result<Option<PathBuf>> {
     let path = self.debuginfo_path(build_id);
     if path.try_exists()? {
       debug!("cache hit on `{}`", path.display());
@@ -128,6 +130,8 @@ impl CachingClient {
 mod tests {
   use super::*;
 
+  use std::borrow::Cow;
+
   use blazesym::symbolize::Elf;
   use blazesym::symbolize::Input;
   use blazesym::symbolize::Source;
@@ -144,10 +148,10 @@ mod tests {
     let client = Client::new(urls).unwrap().unwrap();
     let client = CachingClient::new(client, cache_dir.path()).unwrap();
     // Build ID of `/usr/bin/sleep` on Fedora 38.
-    let build_id = [
+    let build_id = BuildId::RawBytes(Cow::Borrowed(&[
       0xae, 0xb9, 0xa9, 0x83, 0xac, 0xe1, 0xfb, 0x04, 0x7b, 0x23, 0x41, 0xb1, 0x95, 0x01, 0x65,
       0x44, 0x0f, 0xb2, 0xa8, 0xb9,
-    ];
+    ]));
     let path = client.fetch_debug_info(&build_id).unwrap().unwrap();
 
     let symbolizer = Symbolizer::new();
@@ -168,7 +172,7 @@ mod tests {
     let urls = ["https://debuginfod.fedoraproject.org/"];
     let client = Client::new(urls).unwrap().unwrap();
     let client = CachingClient::new(client, cache_dir.path()).unwrap();
-    let build_id = [0x00];
+    let build_id = BuildId::RawBytes(Cow::Borrowed(&[0x00]));
     let info = client.fetch_debug_info(&build_id).unwrap();
     assert!(info.is_none());
   }

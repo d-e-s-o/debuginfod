@@ -17,8 +17,8 @@ use reqwest::Url;
 
 use crate::log::debug;
 use crate::log::warn;
-use crate::util::format_build_id;
 use crate::util::split_env_var_contents;
+use crate::BuildId;
 
 
 /// A client for interacting with (one or more) `debuginfod` servers.
@@ -85,7 +85,7 @@ impl Client {
   /// HTTP errors returned by a subset of servers at the base URLs provided
   /// during construction will be ignored if and only if one of them returned
   /// data successfully.
-  pub fn fetch_debug_info(&self, build_id: &[u8]) -> Result<Option<impl Read>> {
+  pub fn fetch_debug_info(&self, build_id: &BuildId) -> Result<Option<impl Read>> {
     fn status_to_error(status: StatusCode) -> Error {
       let reason = status
         .canonical_reason()
@@ -95,7 +95,7 @@ impl Client {
       anyhow!("request failed with HTTP status {status}{reason}")
     }
 
-    let build_id = format_build_id(build_id);
+    let build_id = build_id.formatted();
     let mut issue_err = None;
     let mut server_err = None;
 
@@ -147,6 +147,7 @@ impl Client {
 mod tests {
   use super::*;
 
+  use std::borrow::Cow;
   use std::io::copy;
 
   use blazesym::symbolize::Elf;
@@ -172,25 +173,31 @@ mod tests {
   fn fetch_debug_info() {
     let urls = ["https://debuginfod.fedoraproject.org/"];
     let client = Client::new(urls).unwrap().unwrap();
-    // Build ID of `/usr/bin/sleep` on Fedora 38.
-    let build_id = [
-      0xae, 0xb9, 0xa9, 0x83, 0xac, 0xe1, 0xfb, 0x04, 0x7b, 0x23, 0x41, 0xb1, 0x95, 0x01, 0x65,
-      0x44, 0x0f, 0xb2, 0xa8, 0xb9,
+    // Build ID of `/usr/bin/sleep` on Fedora 38, in different representations.
+    let build_ids = vec![
+      BuildId::RawBytes(Cow::Borrowed(&[
+        0xae, 0xb9, 0xa9, 0x83, 0xac, 0xe1, 0xfb, 0x04, 0x7b, 0x23, 0x41, 0xb1, 0x95, 0x01, 0x65,
+        0x44, 0x0f, 0xb2, 0xa8, 0xb9,
+      ])),
+      BuildId::Formatted("aeb9a983ace1fb047b2341b1950165440fb2a8b9".into()),
     ];
-    let mut info = client.fetch_debug_info(&build_id).unwrap().unwrap();
 
-    let mut file = NamedTempFile::new().unwrap();
-    let bytes = copy(&mut info, &mut file).unwrap();
-    assert_eq!(bytes, 112216);
+    for build_id in build_ids {
+      let mut info = client.fetch_debug_info(&build_id).unwrap().unwrap();
 
-    let symbolizer = Symbolizer::new();
-    let src = Source::from(Elf::new(file.path()));
-    let sym = symbolizer
-      .symbolize_single(&src, Input::VirtOffset(0x2d70))
-      .unwrap()
-      .into_sym()
-      .unwrap();
-    assert_eq!(sym.name, "usage");
+      let mut file = NamedTempFile::new().unwrap();
+      let bytes = copy(&mut info, &mut file).unwrap();
+      assert_eq!(bytes, 112216);
+
+      let symbolizer = Symbolizer::new();
+      let src = Source::from(Elf::new(file.path()));
+      let sym = symbolizer
+        .symbolize_single(&src, Input::VirtOffset(0x2d70))
+        .unwrap()
+        .into_sym()
+        .unwrap();
+      assert_eq!(sym.name, "usage");
+    }
   }
 
   /// Check that we fail to find debug information for an invalid build
@@ -199,7 +206,7 @@ mod tests {
   fn fetch_debug_info_not_found() {
     let urls = ["https://debuginfod.fedoraproject.org/"];
     let client = Client::new(urls).unwrap().unwrap();
-    let build_id = [0x00];
+    let build_id = BuildId::RawBytes(Cow::Borrowed(&[0x00]));
     let info = client.fetch_debug_info(&build_id).unwrap();
     assert!(info.is_none());
   }
