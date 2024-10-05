@@ -79,7 +79,7 @@ pub enum BuildId<'id> {
 
 impl BuildId<'_> {
   /// Returns a string representation in hex.
-  pub fn formatted(&self) -> Cow<'_, str> {
+  pub fn format(&self) -> Cow<'_, str> {
     match self {
       BuildId::RawBytes(bytes) => Cow::Owned(format_build_id(bytes)),
       BuildId::Formatted(string) => Cow::Borrowed(string),
@@ -89,6 +89,6 @@ impl BuildId<'_> {
 
 impl fmt::Display for BuildId<'_> {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-    write!(f, "{}", self.formatted())
+    write!(f, "{}", self.format())
   }
 }

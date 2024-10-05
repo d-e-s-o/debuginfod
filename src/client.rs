@@ -95,7 +95,7 @@ impl Client {
       anyhow!("request failed with HTTP status {status}{reason}")
     }
 
-    let build_id = build_id.formatted();
+    let build_id = build_id.format();
     let mut issue_err = None;
     let mut server_err = None;
 

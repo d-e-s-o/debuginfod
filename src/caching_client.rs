@@ -77,7 +77,7 @@ impl CachingClient {
   fn debuginfo_path(&self, build_id: &BuildId) -> PathBuf {
     self
       .cache_dir
-      .join(build_id.formatted().deref())
+      .join(build_id.format().deref())
       .join("debuginfo")
   }
 
