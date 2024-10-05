@@ -13,9 +13,10 @@
 )]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
-use crate::util::format_build_id;
 use std::borrow::Cow;
 use std::fmt;
+
+use crate::util::format_build_id;
 
 #[cfg(feature = "fs-cache")]
 mod caching_client;
