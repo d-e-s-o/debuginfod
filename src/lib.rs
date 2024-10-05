@@ -77,12 +77,30 @@ pub enum BuildId<'id> {
   Formatted(Cow<'id, str>),
 }
 
-impl BuildId<'_> {
+impl<'id> BuildId<'id> {
+  /// Create a new `BuildId` from a pre-formatted string.
+  #[inline]
+  pub fn formatted<B>(build_id: B) -> Self
+  where
+    B: Into<Cow<'id, str>>,
+  {
+    Self::Formatted(build_id.into())
+  }
+
+  /// Create a new `BuildId` from the "raw" bytes.
+  #[inline]
+  pub fn raw<B>(build_id: B) -> Self
+  where
+    B: Into<Cow<'id, [u8]>>,
+  {
+    Self::RawBytes(build_id.into())
+  }
+
   /// Returns a string representation in hex.
   pub fn format(&self) -> Cow<'_, str> {
     match self {
-      BuildId::RawBytes(bytes) => Cow::Owned(format_build_id(bytes)),
-      BuildId::Formatted(string) => Cow::Borrowed(string),
+      Self::RawBytes(bytes) => Cow::Owned(format_build_id(bytes)),
+      Self::Formatted(string) => Cow::Borrowed(string),
     }
   }
 }
@@ -90,5 +108,28 @@ impl BuildId<'_> {
 impl fmt::Display for BuildId<'_> {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
     write!(f, "{}", self.format())
+  }
+}
+
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+
+  /// Check that we can construct `BuildId` objects as expected.
+  #[test]
+  fn build_id_construction() {
+    let build_id = BuildId::raw(&[0x00]);
+    assert!(matches!(build_id, BuildId::RawBytes(Cow::Borrowed(..))));
+
+    let build_id = BuildId::raw(vec![0x00]);
+    assert!(matches!(build_id, BuildId::RawBytes(Cow::Owned(..))));
+
+    let build_id = BuildId::formatted("abc");
+    assert!(matches!(build_id, BuildId::Formatted(Cow::Borrowed(..))));
+
+    let build_id = BuildId::formatted("abc".to_string());
+    assert!(matches!(build_id, BuildId::Formatted(Cow::Owned(..))));
   }
 }
