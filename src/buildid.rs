@@ -87,4 +87,17 @@ mod tests {
     let build_id = BuildId::formatted("abc".to_string());
     assert!(matches!(build_id, BuildId::Formatted(Cow::Owned(..))));
   }
+
+  /// Test the `Display` implementation of the `BuildId` type.
+  #[test]
+  fn build_id_display() {
+    let build_id = BuildId::raw(&[
+      0xae, 0xb9, 0xa9, 0x83, 0xac, 0xe1, 0xfb, 0x04, 0x7b, 0x23, 0x41, 0xb1, 0x95, 0x01, 0x65,
+      0x44, 0x0f, 0xb2, 0xa8, 0xb9,
+    ]);
+    assert_eq!(
+      build_id.to_string(),
+      "aeb9a983ace1fb047b2341b1950165440fb2a8b9"
+    );
+  }
 }
