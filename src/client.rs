@@ -20,6 +20,24 @@ use crate::log::warn;
 use crate::util::split_env_var_contents;
 use crate::BuildId;
 
+/// A successful response from a debuginfod server.
+#[derive(Debug)]
+pub struct DebugInfoResponse<'debug_info_response, R> {
+  /// A reader for the data the debuginfod server returned.
+  pub data: R,
+  /// The url of ther server that had the found debug info.
+  pub debug_infod_url: &'debug_info_response str,
+}
+
+/// Creates a new `DebugInfoResponse`.
+impl<'debug_info_response, R: Read> DebugInfoResponse<'debug_info_response, R> {
+  fn new(data: R, debug_infod_url: &'debug_info_response str) -> Self {
+    DebugInfoResponse {
+      data,
+      debug_infod_url,
+    }
+  }
+}
 
 /// A client for interacting with (one or more) `debuginfod` servers.
 #[derive(Debug)]
@@ -80,12 +98,15 @@ impl Client {
   /// Fetch the debug info for the given build ID.
   ///
   /// If debug info data is found for the provided build ID, it can be read
-  /// from the given [`Read`] object.
+  /// from the given [`DebugInfoResponse.data`] field.
   ///
   /// HTTP errors returned by a subset of servers at the base URLs provided
   /// during construction will be ignored if and only if one of them returned
   /// data successfully.
-  pub fn fetch_debug_info(&self, build_id: &BuildId) -> Result<Option<impl Read>> {
+  pub fn fetch_debug_info(
+    &self,
+    build_id: &BuildId,
+  ) -> Result<Option<DebugInfoResponse<impl Read>>> {
     fn status_to_error(status: StatusCode) -> Error {
       let reason = status
         .canonical_reason()
@@ -119,7 +140,7 @@ impl Client {
       };
 
       match response.status() {
-        s if s.is_success() => return Ok(Some(response)),
+        s if s.is_success() => return Ok(Some(DebugInfoResponse::new(response, base_url.as_str()))),
         s if s == StatusCode::NOT_FOUND => continue,
         s => {
           warn!(
@@ -183,10 +204,14 @@ mod tests {
     ];
 
     for build_id in build_ids {
-      let mut info = client.fetch_debug_info(&build_id).unwrap().unwrap();
+      let mut response = client.fetch_debug_info(&build_id).unwrap().unwrap();
+      assert_eq!(
+        response.debug_infod_url,
+        "https://debuginfod.fedoraproject.org/"
+      );
 
       let mut file = NamedTempFile::new().unwrap();
-      let bytes = copy(&mut info, &mut file).unwrap();
+      let bytes = copy(&mut response.data, &mut file).unwrap();
       assert_eq!(bytes, 112216);
 
       let symbolizer = Symbolizer::new();

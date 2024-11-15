@@ -89,7 +89,7 @@ impl CachingClient {
       return Ok(Some(path))
     }
 
-    let mut debug_info = if let Some(debug_info) = self.client.fetch_debug_info(build_id)? {
+    let mut response = if let Some(debug_info) = self.client.fetch_debug_info(build_id)? {
       debug_info
     } else {
       return Ok(None)
@@ -100,8 +100,8 @@ impl CachingClient {
     // `persist` below won't work and we cannot guarantee atomicity.
     let mut tempfile =
       NamedTempFile::new_in(&self.cache_dir).context("failed to create temporary file")?;
-    let _count =
-      copy(&mut debug_info, &mut tempfile).context("failed to write debug info to file system")?;
+    let _count = copy(&mut response.data, &mut tempfile)
+      .context("failed to write debug info to file system")?;
 
     // SANITY: Our path is guaranteed to always have a parent.
     let dir = path.parent().unwrap();
