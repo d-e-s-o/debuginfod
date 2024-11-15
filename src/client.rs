@@ -30,12 +30,9 @@ pub struct Response<'url, R> {
 }
 
 /// Creates a new `DebugInfoResponse`.
-impl<'debug_info_response, R: Read> Response<'debug_info_response, R> {
-  fn new(data: R, debug_infod_url: &'debug_info_response str) -> Self {
-    Response {
-      data,
-      server_url: debug_infod_url,
-    }
+impl<'url, R: Read> Response<'url, R> {
+  fn new(data: R, server_url: &'url str) -> Self {
+    Self { data, server_url }
   }
 }
 

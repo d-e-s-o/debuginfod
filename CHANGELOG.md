@@ -2,6 +2,8 @@ Unreleased
 ----------
 - Introduced `BuildId` enum and adjusted `fetch_debug_info` methods to
   work with it
+- Introduced `Response` type to include additional meta data from
+  `Client::fetch_debug_info` method
 
 
 0.1.1
