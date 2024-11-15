@@ -22,19 +22,19 @@ use crate::BuildId;
 
 /// A successful response from a debuginfod server.
 #[derive(Debug)]
-pub struct DebugInfoResponse<'debug_info_response, R> {
+pub struct Response<'url, R> {
   /// A reader for the data the debuginfod server returned.
   pub data: R,
-  /// The url of ther server that had the found debug info.
-  pub debug_infod_url: &'debug_info_response str,
+  /// The url of the server that had the found debug info.
+  pub server_url: &'url str,
 }
 
 /// Creates a new `DebugInfoResponse`.
-impl<'debug_info_response, R: Read> DebugInfoResponse<'debug_info_response, R> {
+impl<'debug_info_response, R: Read> Response<'debug_info_response, R> {
   fn new(data: R, debug_infod_url: &'debug_info_response str) -> Self {
-    DebugInfoResponse {
+    Response {
       data,
-      debug_infod_url,
+      server_url: debug_infod_url,
     }
   }
 }
@@ -98,15 +98,12 @@ impl Client {
   /// Fetch the debug info for the given build ID.
   ///
   /// If debug info data is found for the provided build ID, it can be read
-  /// from the given [`DebugInfoResponse.data`] field.
+  /// from the response's `data` field.
   ///
   /// HTTP errors returned by a subset of servers at the base URLs provided
   /// during construction will be ignored if and only if one of them returned
   /// data successfully.
-  pub fn fetch_debug_info(
-    &self,
-    build_id: &BuildId,
-  ) -> Result<Option<DebugInfoResponse<impl Read>>> {
+  pub fn fetch_debug_info(&self, build_id: &BuildId) -> Result<Option<Response<impl Read>>> {
     fn status_to_error(status: StatusCode) -> Error {
       let reason = status
         .canonical_reason()
@@ -140,7 +137,7 @@ impl Client {
       };
 
       match response.status() {
-        s if s.is_success() => return Ok(Some(DebugInfoResponse::new(response, base_url.as_str()))),
+        s if s.is_success() => return Ok(Some(Response::new(response, base_url.as_str()))),
         s if s == StatusCode::NOT_FOUND => continue,
         s => {
           warn!(
@@ -205,10 +202,7 @@ mod tests {
 
     for build_id in build_ids {
       let mut response = client.fetch_debug_info(&build_id).unwrap().unwrap();
-      assert_eq!(
-        response.debug_infod_url,
-        "https://debuginfod.fedoraproject.org/"
-      );
+      assert_eq!(response.server_url, "https://debuginfod.fedoraproject.org/");
 
       let mut file = NamedTempFile::new().unwrap();
       let bytes = copy(&mut response.data, &mut file).unwrap();
