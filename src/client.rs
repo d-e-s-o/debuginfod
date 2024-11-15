@@ -126,7 +126,7 @@ impl Client {
       let result = self
         .client
         .execute(Request::new(Method::GET, url.clone()))
-        .context("failed to issue request to `{url}`");
+        .with_context(|| format!("failed to issue request to `{url}`"));
       let response = match result {
         Ok(response) => response,
         Err(err) => {
