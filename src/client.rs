@@ -135,7 +135,7 @@ impl Client {
     }
 
     if let Some(err) = server_err.or(issue_err) {
-      Err(err).context("failed to fetch debug info for build ID `{build_id}`")
+      Err(err).with_context(|| format!("failed to fetch debug info for build ID `{build_id}`"))
     } else {
       Ok(None)
     }
