@@ -24,6 +24,7 @@ pub use buildid::BuildId;
 #[cfg_attr(docsrs, doc(cfg(feature = "fs-cache")))]
 pub use caching_client::CachingClient;
 pub use client::Client;
+pub use client::Response;
 
 
 #[cfg(feature = "tracing")]
