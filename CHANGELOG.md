@@ -1,3 +1,8 @@
+Unreleased
+----------
+- Exported `Response` type from rate to make it nameable in user code
+
+
 0.2.0
 -----
 - Introduced `BuildId` enum and adjusted `fetch_debug_info` methods to
