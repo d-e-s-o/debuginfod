@@ -35,7 +35,7 @@ tracing = ["dep:tracing"]
 
 [dependencies]
 anyhow = "1.0.68"
-dirs = {version = "5.0", default-features = false, optional = true}
+dirs = {version = "6.0", default-features = false, optional = true}
 reqwest = {version = "0.12.4", features = ["blocking", "gzip"]}
 tempfile = {version = "3.10.1", default-features = false, optional = true}
 tracing = {version = "0.1.27", default-features = false, optional = true}
