@@ -1,4 +1,4 @@
-// Copyright (C) 2024 Daniel Mueller <deso@posteo.net>
+// Copyright (C) 2024-2025 Daniel Mueller <deso@posteo.net>
 // SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 use std::env;
@@ -165,9 +165,9 @@ mod tests {
   use std::borrow::Cow;
   use std::io::copy;
 
-  use blazesym::symbolize::Elf;
+  use blazesym::symbolize::source::Elf;
+  use blazesym::symbolize::source::Source;
   use blazesym::symbolize::Input;
-  use blazesym::symbolize::Source;
   use blazesym::symbolize::Symbolizer;
 
   use tempfile::NamedTempFile;
