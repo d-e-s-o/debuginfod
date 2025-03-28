@@ -131,6 +131,7 @@ mod tests {
   use super::*;
 
   use std::borrow::Cow;
+  use std::ffi::OsStr;
 
   use blazesym::symbolize::source::Elf;
   use blazesym::symbolize::source::Source;
@@ -139,6 +140,32 @@ mod tests {
 
   use tempfile::tempdir;
 
+  use test_fork::fork;
+
+
+  /// Check that the creation of a `Client` object from information
+  /// provided in the environment works as it should.
+  #[fork]
+  #[test]
+  fn from_env_creation() {
+    let () = unsafe { env::remove_var("DEBUGINFOD_CACHE_PATH") };
+    let urls = ["https://debug.infod"];
+    let client = Client::new(urls).unwrap().unwrap();
+    // Without the environment variable present, we expect one of the
+    // defaults to be used.
+    let client = CachingClient::from_env(client).unwrap();
+    assert_eq!(
+      client.cache_dir.file_name().unwrap(),
+      OsStr::new("debuginfod_client")
+    );
+
+    let cache_dir = tempdir().unwrap();
+    let () = unsafe { env::set_var("DEBUGINFOD_CACHE_PATH", cache_dir.path()) };
+    let urls = ["https://debug.infod"];
+    let client = Client::new(urls).unwrap().unwrap();
+    let client = CachingClient::from_env(client).unwrap();
+    assert_eq!(client.cache_dir, cache_dir.path());
+  }
 
   /// Check that we can successfully fetch debug information.
   #[test]
