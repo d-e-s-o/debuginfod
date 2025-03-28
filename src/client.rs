@@ -172,6 +172,8 @@ mod tests {
 
   use tempfile::NamedTempFile;
 
+  use test_fork::fork;
+
 
   /// Make sure that we fail `Client` construction when no base URLs are
   /// provided.
@@ -181,6 +183,21 @@ mod tests {
     assert!(client.is_none());
 
     let _err = Client::new(["!#&*(@&!"]).unwrap_err();
+  }
+
+  /// Check that the creation of a `Client` object from information
+  /// provided in the environment works as it should.
+  #[fork]
+  #[test]
+  fn from_env_creation() {
+    let () = unsafe { env::remove_var("DEBUGINFOD_URLS") };
+    let result = Client::from_env().unwrap();
+    assert!(result.is_none(), "{result:?}");
+
+    let urls = "https://debug.infod https://de.bug.info.d";
+    let () = unsafe { env::set_var("DEBUGINFOD_URLS", urls) };
+    let client = Client::from_env().unwrap().unwrap();
+    assert_eq!(client.base_urls.len(), 2);
   }
 
   /// Check that we can successfully fetch debug information.
