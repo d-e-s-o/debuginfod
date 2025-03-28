@@ -6,6 +6,7 @@ rust-version = "1.64"
 license = "Apache-2.0 OR MIT"
 homepage = "https://github.com/d-e-s-o/debuginfod"
 repository = "https://github.com/d-e-s-o/debuginfod.git"
+documentation = "https://docs.rs/debuginfod"
 readme = "README.md"
 categories = [
   "api-bindings",
