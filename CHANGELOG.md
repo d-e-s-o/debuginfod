@@ -1,6 +1,7 @@
 Unreleased
 ----------
 - Exported `Response` type from rate to make it nameable in user code
+- Switched from `openssl` to `rustls` backend for `reqwest` client
 
 
 0.2.0
