@@ -100,7 +100,7 @@ impl Client {
   /// HTTP errors returned by a subset of servers at the base URLs provided
   /// during construction will be ignored if and only if one of them returned
   /// data successfully.
-  pub fn fetch_debug_info(&self, build_id: &BuildId) -> Result<Option<Response<impl Read>>> {
+  pub fn fetch_debug_info(&self, build_id: &BuildId) -> Result<Option<Response<'_, impl Read>>> {
     fn status_to_error(status: StatusCode) -> Error {
       let reason = status
         .canonical_reason()
