@@ -51,8 +51,7 @@ impl Client {
   ///
   /// The provided `base_urls` is a list of URLs in decreasing order of
   /// importance. `Ok(None)` will be returned if this list is empty. If
-  /// any of the variables could not be parsed, an error will be
-  /// emitted.
+  /// any of the URLs could not be parsed, an error will be emitted.
   pub fn new<'url, U>(base_urls: U) -> Result<Option<Self>>
   where
     U: IntoIterator<Item = &'url str>,
