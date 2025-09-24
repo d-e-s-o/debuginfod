@@ -42,7 +42,7 @@ tempfile = {version = "3.10.1", default-features = false, optional = true}
 tracing = {version = "0.1.27", default-features = false, optional = true}
 
 [dev-dependencies]
-blazesym = {version = "=0.2.0-rc.5", default-features = false}
+blazesym = {version = "0.2", default-features = false}
 test-fork = {version = "0.1.3", default-features = false}
 # A set of unused dependencies that we require to force correct minimum versions
 # of transitive dependencies, for cases where our dependencies have incorrect
