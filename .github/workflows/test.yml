@@ -78,6 +78,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
       - run: cargo clippy --workspace --no-deps --all-targets -- -A unknown_lints -A deprecated -D warnings
   rustfmt:
     name: Check code formatting
