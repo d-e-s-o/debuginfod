@@ -21,7 +21,6 @@ use crate::log::debug;
 use crate::BuildId;
 use crate::Client;
 
-
 /// A debuginfod client that caches data using the file system.
 #[derive(Debug)]
 pub struct CachingClient {
@@ -86,13 +85,13 @@ impl CachingClient {
     let path = self.debuginfo_path(build_id);
     if path.try_exists()? {
       debug!("cache hit on `{}`", path.display());
-      return Ok(Some(path))
+      return Ok(Some(path));
     }
 
     let mut response = if let Some(debug_info) = self.client.fetch_debug_info(build_id)? {
       debug_info
     } else {
-      return Ok(None)
+      return Ok(None);
     };
 
     // It's important that our temporary file is located inside `cache_dir`
@@ -125,7 +124,6 @@ impl CachingClient {
   }
 }
 
-
 #[cfg(test)]
 mod tests {
   use super::*;
@@ -141,7 +139,6 @@ mod tests {
   use tempfile::tempdir;
 
   use test_fork::fork;
-
 
   /// Check that the creation of a `Client` object from information
   /// provided in the environment works as it should.

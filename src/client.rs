@@ -62,7 +62,7 @@ impl Client {
       .collect::<Result<Vec<_>>>()?;
 
     if base_urls.is_empty() {
-      return Ok(None)
+      return Ok(None);
     }
     debug!("using debuginfod URLs: {base_urls:#?}");
 
@@ -81,7 +81,7 @@ impl Client {
     let urls_str = if let Some(urls_str) = env::var_os("DEBUGINFOD_URLS") {
       urls_str
     } else {
-      return Ok(None)
+      return Ok(None);
     };
 
     let urls_str = urls_str
@@ -128,7 +128,7 @@ impl Client {
         Err(err) => {
           warn!("failed to issue GET request `{url}`: {err}");
           issue_err = issue_err.or_else(|| Some(err));
-          continue
+          continue;
         },
       };
 
@@ -143,7 +143,7 @@ impl Client {
               .unwrap_or_default()
           );
           server_err = server_err.or_else(|| Some(status_to_error(s)));
-          continue
+          continue;
         },
       }
     }
@@ -155,7 +155,6 @@ impl Client {
     }
   }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -172,7 +171,6 @@ mod tests {
   use tempfile::NamedTempFile;
 
   use test_fork::fork;
-
 
   /// Make sure that we fail `Client` construction when no base URLs are
   /// provided.

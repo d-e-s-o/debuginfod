@@ -26,7 +26,6 @@ pub use caching_client::CachingClient;
 pub use client::Client;
 pub use client::Response;
 
-
 #[cfg(feature = "tracing")]
 #[macro_use]
 #[allow(unused_imports)]
