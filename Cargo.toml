@@ -28,18 +28,22 @@ A crate for interacting with debuginfod servers.
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-default = ["fs-cache"]
+default = ["fs-cache", "reqwest"]
 # Enable support for file system based caching.
 fs-cache = ["dep:dirs", "dep:tempfile"]
+# Provide an HTTP client implementation based on reqwest.
+reqwest = ["dep:reqwest"]
 # Enable support for emitting traces.
 tracing = ["dep:tracing"]
 
 [dependencies]
 anyhow = "1.0.68"
 dirs = {version = "6.0", default-features = false, optional = true}
-reqwest = {version = "0.12.4", default-features = false, features = ["blocking", "gzip", "rustls-tls"]}
+http = "1.3.1"
+reqwest = {version = "0.12.4", default-features = false, features = ["blocking", "gzip", "rustls-tls"], optional = true}
 tempfile = {version = "3.10.1", default-features = false, optional = true}
 tracing = {version = "0.1.27", default-features = false, optional = true}
+url = "2.5.7"
 
 [dev-dependencies]
 blazesym = {version = "0.2", default-features = false}

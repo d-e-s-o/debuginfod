@@ -138,6 +138,9 @@ mod tests {
   use blazesym::symbolize::Input;
   use blazesym::symbolize::Symbolizer;
 
+  #[cfg(feature = "reqwest")]
+  use reqwest::blocking::Client as ReqwestBlockingClient;
+
   use tempfile::tempdir;
 
   use test_fork::fork;
@@ -145,6 +148,7 @@ mod tests {
 
   /// Check that the creation of a `Client` object from information
   /// provided in the environment works as it should.
+  #[cfg(feature = "reqwest")]
   #[fork]
   #[test]
   fn from_env_creation() {
@@ -152,7 +156,11 @@ mod tests {
     //         context.
     let () = unsafe { env::remove_var("DEBUGINFOD_CACHE_PATH") };
     let urls = ["https://debug.infod"];
-    let client = Client::new(urls).unwrap().unwrap();
+    let client = Client::builder()
+      .http_client(ReqwestBlockingClient::new())
+      .build(urls)
+      .unwrap()
+      .unwrap();
     // Without the environment variable present, we expect one of the
     // defaults to be used.
     let client = CachingClient::from_env(client).unwrap();
@@ -166,17 +174,26 @@ mod tests {
     //         context.
     let () = unsafe { env::set_var("DEBUGINFOD_CACHE_PATH", cache_dir.path()) };
     let urls = ["https://debug.infod"];
-    let client = Client::new(urls).unwrap().unwrap();
+    let client = Client::builder()
+      .http_client(ReqwestBlockingClient::new())
+      .build(urls)
+      .unwrap()
+      .unwrap();
     let client = CachingClient::from_env(client).unwrap();
     assert_eq!(client.cache_dir, cache_dir.path());
   }
 
   /// Check that we can successfully fetch debug information.
+  #[cfg(feature = "reqwest")]
   #[test]
   fn fetch_debug_info() {
     let cache_dir = tempdir().unwrap();
     let urls = ["https://debuginfod.fedoraproject.org/"];
-    let client = Client::new(urls).unwrap().unwrap();
+    let client = Client::builder()
+      .http_client(ReqwestBlockingClient::new())
+      .build(urls)
+      .unwrap()
+      .unwrap();
     let client = CachingClient::new(client, cache_dir.path()).unwrap();
     // Build ID of `/usr/bin/sleep` on Fedora 38.
     let build_id = BuildId::RawBytes(Cow::Borrowed(&[
@@ -197,11 +214,16 @@ mod tests {
 
   /// Check that we fail to find debug information for an invalid build
   /// ID.
+  #[cfg(feature = "reqwest")]
   #[test]
   fn fetch_debug_info_not_found() {
     let cache_dir = tempdir().unwrap();
     let urls = ["https://debuginfod.fedoraproject.org/"];
-    let client = Client::new(urls).unwrap().unwrap();
+    let client = Client::builder()
+      .http_client(ReqwestBlockingClient::new())
+      .build(urls)
+      .unwrap()
+      .unwrap();
     let client = CachingClient::new(client, cache_dir.path()).unwrap();
     let build_id = BuildId::RawBytes(Cow::Borrowed(&[0x00]));
     let info = client.fetch_debug_info(&build_id).unwrap();
