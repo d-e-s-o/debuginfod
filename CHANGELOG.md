@@ -1,3 +1,11 @@
+Unreleased
+----------
+- Introduced ability to use arbitrary HTTP clients via `HttpClient`
+  trait
+  - Added `ClientBuilder` type for configurable creation of a `Client`
+    instance
+
+
 0.2.1
 -----
 - Exported `Response` type from rate to make it nameable in user code

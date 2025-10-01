@@ -17,6 +17,9 @@ mod buildid;
 #[cfg(feature = "fs-cache")]
 mod caching_client;
 mod client;
+mod http_client;
+#[cfg(feature = "reqwest")]
+mod reqwest_client;
 mod util;
 
 pub use buildid::BuildId;
@@ -24,7 +27,11 @@ pub use buildid::BuildId;
 #[cfg_attr(docsrs, doc(cfg(feature = "fs-cache")))]
 pub use caching_client::CachingClient;
 pub use client::Client;
+pub use client::ClientBuilder;
 pub use client::Response;
+pub use http_client::HttpClient;
+pub use http_client::HttpClientError;
+pub use http_client::Readable;
 
 
 #[cfg(feature = "tracing")]

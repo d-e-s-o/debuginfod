@@ -138,6 +138,8 @@ mod tests {
   use blazesym::symbolize::Input;
   use blazesym::symbolize::Symbolizer;
 
+  use reqwest::blocking::Client as ReqwestBlockingClient;
+
   use tempfile::tempdir;
 
   use test_fork::fork;
@@ -152,7 +154,11 @@ mod tests {
     //         context.
     let () = unsafe { env::remove_var("DEBUGINFOD_CACHE_PATH") };
     let urls = ["https://debug.infod"];
-    let client = Client::new(urls).unwrap().unwrap();
+    let client = Client::builder()
+      .http_client(ReqwestBlockingClient::new())
+      .build(urls)
+      .unwrap()
+      .unwrap();
     // Without the environment variable present, we expect one of the
     // defaults to be used.
     let client = CachingClient::from_env(client).unwrap();
@@ -166,7 +172,11 @@ mod tests {
     //         context.
     let () = unsafe { env::set_var("DEBUGINFOD_CACHE_PATH", cache_dir.path()) };
     let urls = ["https://debug.infod"];
-    let client = Client::new(urls).unwrap().unwrap();
+    let client = Client::builder()
+      .http_client(ReqwestBlockingClient::new())
+      .build(urls)
+      .unwrap()
+      .unwrap();
     let client = CachingClient::from_env(client).unwrap();
     assert_eq!(client.cache_dir, cache_dir.path());
   }
@@ -176,7 +186,11 @@ mod tests {
   fn fetch_debug_info() {
     let cache_dir = tempdir().unwrap();
     let urls = ["https://debuginfod.fedoraproject.org/"];
-    let client = Client::new(urls).unwrap().unwrap();
+    let client = Client::builder()
+      .http_client(ReqwestBlockingClient::new())
+      .build(urls)
+      .unwrap()
+      .unwrap();
     let client = CachingClient::new(client, cache_dir.path()).unwrap();
     // Build ID of `/usr/bin/sleep` on Fedora 38.
     let build_id = BuildId::RawBytes(Cow::Borrowed(&[
@@ -201,7 +215,11 @@ mod tests {
   fn fetch_debug_info_not_found() {
     let cache_dir = tempdir().unwrap();
     let urls = ["https://debuginfod.fedoraproject.org/"];
-    let client = Client::new(urls).unwrap().unwrap();
+    let client = Client::builder()
+      .http_client(ReqwestBlockingClient::new())
+      .build(urls)
+      .unwrap()
+      .unwrap();
     let client = CachingClient::new(client, cache_dir.path()).unwrap();
     let build_id = BuildId::RawBytes(Cow::Borrowed(&[0x00]));
     let info = client.fetch_debug_info(&build_id).unwrap();
