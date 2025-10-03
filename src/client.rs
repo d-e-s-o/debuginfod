@@ -189,11 +189,15 @@ mod tests {
   #[fork]
   #[test]
   fn from_env_creation() {
+    // SAFETY: `test-fork` ensures that we are in a single-threaded
+    //         context.
     let () = unsafe { env::remove_var("DEBUGINFOD_URLS") };
     let result = Client::from_env().unwrap();
     assert!(result.is_none(), "{result:?}");
 
     let urls = "https://debug.infod https://de.bug.info.d";
+    // SAFETY: `test-fork` ensures that we are in a single-threaded
+    //         context.
     let () = unsafe { env::set_var("DEBUGINFOD_URLS", urls) };
     let client = Client::from_env().unwrap().unwrap();
     assert_eq!(client.base_urls.len(), 2);

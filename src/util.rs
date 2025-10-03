@@ -1,4 +1,4 @@
-// Copyright (C) 2024 Daniel Mueller <deso@posteo.net>
+// Copyright (C) 2024-2025 Daniel Mueller <deso@posteo.net>
 // SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
@@ -15,9 +15,9 @@ pub(crate) fn format_build_id(build_id: &[u8]) -> String {
 pub(crate) fn split_env_var_contents(urls_str: &str) -> impl Iterator<Item = &str> {
   urls_str
     .split([',', ' '])
-    .map(|s| s.trim())
+    .map(str::trim)
     .filter(|s| !s.is_empty())
-    .map(|url| url.trim())
+    .map(str::trim)
 }
 
 

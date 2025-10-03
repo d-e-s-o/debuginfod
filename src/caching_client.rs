@@ -148,6 +148,8 @@ mod tests {
   #[fork]
   #[test]
   fn from_env_creation() {
+    // SAFETY: `test-fork` ensures that we are in a single-threaded
+    //         context.
     let () = unsafe { env::remove_var("DEBUGINFOD_CACHE_PATH") };
     let urls = ["https://debug.infod"];
     let client = Client::new(urls).unwrap().unwrap();
@@ -160,6 +162,8 @@ mod tests {
     );
 
     let cache_dir = tempdir().unwrap();
+    // SAFETY: `test-fork` ensures that we are in a single-threaded
+    //         context.
     let () = unsafe { env::set_var("DEBUGINFOD_CACHE_PATH", cache_dir.path()) };
     let urls = ["https://debug.infod"];
     let client = Client::new(urls).unwrap().unwrap();
