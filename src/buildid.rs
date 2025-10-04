@@ -6,7 +6,6 @@ use std::fmt;
 
 use crate::util::format_build_id;
 
-
 /// The (GNU) build id is a randomly generated string added by most compilers to
 /// executables which is used by debuginfod to index them. It's typically stored
 /// as a note in ELF files with name `ELF_NOTE_GNU` and type `NT_GNU_BUILD_ID`.
@@ -66,11 +65,9 @@ impl fmt::Display for BuildId<'_> {
   }
 }
 
-
 #[cfg(test)]
 mod tests {
   use super::*;
-
 
   /// Check that we can construct `BuildId` objects as expected.
   #[test]
