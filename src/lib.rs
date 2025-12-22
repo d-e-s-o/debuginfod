@@ -1,4 +1,4 @@
-// Copyright (C) 2024 Daniel Mueller <deso@posteo.net>
+// Copyright (C) 2024-2025 Daniel Mueller <deso@posteo.net>
 // SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 //! A crate for interacting with [`debuginfod`][debuginfod] servers.
@@ -33,6 +33,9 @@ pub use http_client::HttpClient;
 pub use http_client::HttpClientError;
 pub use http_client::Readable;
 
+#[cfg(feature = "reqwest")]
+#[cfg_attr(docsrs, doc(cfg(feature = "reqwest")))]
+pub use reqwest;
 
 #[cfg(feature = "tracing")]
 #[macro_use]
