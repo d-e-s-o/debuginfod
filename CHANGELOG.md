@@ -1,5 +1,5 @@
-Unreleased
-----------
+0.3.0
+-----
 - Introduced ability to use arbitrary HTTP clients via `HttpClient`
   trait
   - Added `ClientBuilder` type for configurable creation of a `Client`
